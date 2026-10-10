@@ -1,0 +1,91 @@
+name: Build NetHunter kernel
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check selected branch
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_NAME" != "Nethunter" ]]; then
+            echo "::error::Select the Nethunter branch (the branch containing build.sh and config.cfg)."
+            exit 1
+          fi
+
+      - name: Check out kernel and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            git build-essential bc flex bison libssl-dev libelf-dev \
+            device-tree-compiler lz4 xz-utils zlib1g-dev libncurses-dev \
+            pahole python3 python-is-python3 openjdk-17-jdk rsync cpio kmod zstd figlet
+
+      - name: Fetch configured toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/toolchains"
+          git clone --depth 1 https://github.com/karamdev1/zyc-clang-14-20260619.git \
+            "$HOME/toolchains/zyc-clang-14-20260619"
+          test -x "$HOME/toolchains/zyc-clang-14-20260619/bin/clang"
+          "$HOME/toolchains/zyc-clang-14-20260619/bin/clang" --version
+
+      - name: Build clean kernel with m32_nethunter_defconfig
+        shell: bash
+        env:
+          TERM: xterm
+        run: |
+          set -euo pipefail
+          test -f build.sh
+          test -f config.cfg
+          test -f arch/arm64/configs/m32_nethunter_defconfig
+          test ! -e out/.config
+          printf '1\nm32_nethunter_defconfig\n\nE\n' |
+            timeout 110m bash ./build.sh 2>&1 | tee "$RUNNER_TEMP/kernel-build.log"
+          if grep -Eq 'Kernel Building Failed|Config Applying Failed|Cleaning Failed|m32_nethunter_defconfig is not found' \
+              "$RUNNER_TEMP/kernel-build.log"; then
+            echo "::error::build.sh reported a failed clean, configuration, or compile step."
+            exit 1
+          fi
+          grep -Fq '[+] Cleaning Succeed' "$RUNNER_TEMP/kernel-build.log"
+          grep -Fq '[+] Config Applying Succeed' "$RUNNER_TEMP/kernel-build.log"
+          grep -Fq '[+] Kernel Building Succeed' "$RUNNER_TEMP/kernel-build.log"
+          test -s out/.config
+          grep -Fxq 'CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME="Image.gz-dtb"' out/.config
+          test -s out/arch/arm64/boot/Image.gz-dtb
+          test -s out/arch/arm64/boot/Image.gz
+
+      - name: Collect kernel build outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p kernel-artifacts
+          cp out/arch/arm64/boot/Image.gz-dtb out/arch/arm64/boot/Image.gz \
+            kernel-artifacts/
+          cp out/.config kernel-artifacts/kernel.config
+          if [[ -d out/arch/arm64/boot/dts ]]; then
+            mkdir -p kernel-artifacts/dtbs
+            rsync -a --prune-empty-dirs --include='*/' --include='*.dtb' --exclude='*' \
+              out/arch/arm64/boot/dts/ kernel-artifacts/dtbs/
+          fi
+          test -s kernel-artifacts/Image.gz-dtb
+          test -s kernel-artifacts/Image.gz
+
+      - name: Upload kernel outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: nethunter-kernel-build
+          path: kernel-artifacts/
+          if-no-files-found: error
