@@ -103,7 +103,7 @@ function show_gui() {
     echo -e "\t├─────────────────────────────────────────────────────┤$ENDCOLOR"
 	echo -e "\t$BOLDBLUE│$ENDCOLOR                     STATUS                          $BOLDBLUE│$ENDCOLOR"
 	echo -e "\t$BOLDBLUE├─────────────────────────────────────────────────────┤$ENDCOLOR"
-	echo -e "\t$BOLDBLUE│${BOLDCYAN}By: ${BOLDYELLOW}Karam (karamdev1)$ENDCOLOR                                $BOLDBLUE│$ENDCOLOR"
+	echo -e "\t$BOLDBLUE│${BOLDCYAN}By: ${BOLDYELLOW}android14 (build)$ENDCOLOR                                $BOLDBLUE│$ENDCOLOR"
 	echo -e "\t$BOLDBLUE│${BOLDCYAN}Version: ${BOLDYELLOW}v2.1$ENDCOLOR                                        $BOLDBLUE│$ENDCOLOR"
 	echo -e "\t$BOLDBLUE│                                                     │$ENDCOLOR"
 	echo -e "\t$BOLDBLUE│${BOLDCYAN}ARCH: $BOLDYELLOW${ARCH}$ENDCOLOR                                          $BOLDBLUE│$ENDCOLOR"
@@ -326,7 +326,7 @@ while true; do
 			;;
 		G|g)
 			echo -e "$BOLDGREEN[+] Opening the creator's github page$ENDCOLOR"
-			xdg-open https://github.com/karamdev1 > /dev/null 2>&1 &
+			xdg-open https://github.com/Samo1408 > /dev/null 2>&1 &
 			;;
 		*)
 			echo -e "$BOLDRED[!] Invalid Action!!$ENDCOLOR"
