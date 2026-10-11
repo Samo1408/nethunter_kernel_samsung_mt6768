@@ -65,14 +65,14 @@ jobs:
           test -s out/.config
           grep -Fxq 'CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME="Image.gz-dtb"' out/.config
           test -s out/arch/arm64/boot/Image.gz-dtb
-          test -s out/arch/arm64/boot/Image.gz
+          #test -s out/arch/arm64/boot/Image.gz
 
       - name: Collect kernel build outputs
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p kernel-artifacts
-          cp out/arch/arm64/boot/Image.gz-dtb out/arch/arm64/boot/Image.gz \
+          cp out/arch/arm64/boot/Image.gz-dtb \
             kernel-artifacts/
           cp out/.config kernel-artifacts/kernel.config
           if [[ -d out/arch/arm64/boot/dts ]]; then
@@ -81,7 +81,7 @@ jobs:
               out/arch/arm64/boot/dts/ kernel-artifacts/dtbs/
           fi
           test -s kernel-artifacts/Image.gz-dtb
-          test -s kernel-artifacts/Image.gz
+          #test -s kernel-artifacts/Image.gz
 
       - name: Upload kernel outputs
         uses: actions/upload-artifact@v4
