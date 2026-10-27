@@ -14,7 +14,7 @@ jobs:
       - name: Check selected branch
         shell: bash
         run: |
-          if [[ "$GITHUB_REF_NAME" != "Nethunter" ]]; then
+          if [[ "$GITHUB_REF_NAME" != "noksu" ]]; then
             echo "::error::Select the Nethunter branch (the branch containing build.sh and config.cfg)."
             exit 1
           fi
