@@ -46,10 +46,8 @@ jobs:
         env:
           TERM: xterm
         run: |
-          
           curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s dev
 
-          
           printf '1\nm32_nethunter_defconfig\n\nE\n' |
             timeout 110m bash ./build.sh 2>&1 | tee "$RUNNER_TEMP/kernel-build.log"
           if grep -Eq 'Kernel Building Failed|Config Applying Failed|Cleaning Failed|m32_nethunter_defconfig is not found' \
