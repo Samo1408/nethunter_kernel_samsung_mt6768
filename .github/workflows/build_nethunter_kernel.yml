@@ -21,9 +21,8 @@ jobs:
 
       - name: Check out kernel and submodules
         uses: actions/checkout@v4
-        with:
-         run: curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s dev
-
+        
+         
 
       - name: Install build dependencies
         run: |
@@ -72,6 +71,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s dev
+
           mkdir -p kernel-artifacts
           cp out/arch/arm64/boot/Image.gz-dtb \
             kernel-artifacts/
