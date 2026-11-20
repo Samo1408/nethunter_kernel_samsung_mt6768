@@ -29,7 +29,7 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
             git build-essential bc flex bison libssl-dev libelf-dev \
             device-tree-compiler lz4 xz-utils zlib1g-dev libncurses-dev \
-            pahole python3 python-is-python3 openjdk-17-jdk rsync cpio kmod zstd figlet
+            pahole python3 python-is-python3 openjdk-17-jdk rsync cpio kmod zstd figlet expect
 
       - name: Fetch configured toolchain
         shell: bash
@@ -56,8 +56,20 @@ jobs:
           # Confirm the selected defconfig requests built-in KernelSU.
           grep -Fxq 'CONFIG_KSU=y' arch/arm64/configs/m32_nethunter_defconfig
 
-          printf '1\nm32_nethunter_defconfig\n\nE\n' |
-            timeout 110m bash ./build.sh 2>&1 | tee "$RUNNER_TEMP/kernel-build.log"
+          # Drive build.sh interactively; wait for its menu prompt before exiting.
+          set -o pipefail
+          timeout 110m expect <<'EOF' | tee "$RUNNER_TEMP/kernel-build.log"
+          log_user 1
+          spawn bash ./build.sh
+          set timeout 110m
+          expect {
+            -re {Select.*(option|action)|Choose.*(option|action)|\[1-8\].*(build|config)} { send "1\r"; exp_continue }
+            -re {defconfig|config.*name|configuration.*name} { send "m32_nethunter_defconfig\r"; exp_continue }
+            -re {Press.*(Enter|return)|Continue|confirm} { send "\r"; exp_continue }
+            -re {Enter the action \[0-8/E/G\]:} { send "E\r"; exp_continue }
+            eof
+          }
+          EOF"
           if grep -Eq 'Kernel Building Failed|Config Applying Failed|Cleaning Failed|m32_nethunter_defconfig is not found' \
               "$RUNNER_TEMP/kernel-build.log"; then
             echo "::error::build.sh reported a failed clean, configuration, or compile step."
