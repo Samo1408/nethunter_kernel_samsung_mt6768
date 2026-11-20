@@ -11,13 +11,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
-      - name: Check selected branch
-        shell: bash
-        run: |
-          if [[ "$GITHUB_REF_NAME" != "test-fina" ]]; then
-            echo "::error::Select the Nethunter branch (the branch containing build.sh and config.cfg)."
-            exit 1
-          fi
+      
 
       - name: Initialize and Fetch Submodules
         run: curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s dev
