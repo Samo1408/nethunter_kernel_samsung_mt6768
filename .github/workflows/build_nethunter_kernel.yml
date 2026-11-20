@@ -13,12 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         device:
-          - id: a22
-            defconfig: a22_nethunter_defconfig
-          - id: a32
-            defconfig: a32_nethunter_defconfig
-          - id: f22
-            defconfig: f22_nethunter_defconfig
+          
           - id: m32
             defconfig: m32_nethunter_defconfig
 
@@ -29,7 +24,7 @@ jobs:
           submodules: false
 
       - name: Initialize and Fetch Submodules
-        run: git submodule update --init --recursive
+        run: curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s dev
 
       - name: Install Build Dependencies
         run: |
