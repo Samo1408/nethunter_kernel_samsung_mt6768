@@ -68,8 +68,14 @@ jobs:
           grep -Fq '[+] Kernel Building Succeed' "$RUNNER_TEMP/kernel-build.log"
           test -s out/.config
           # Fail instead of uploading a kernel if KernelSU was dropped from the final config.
-          grep -Fxq 'CONFIG_KSU=y' out/.config
-          grep -Fxq 'CONFIG_KSU_SUSFS=y' out/.config
+          if ! grep -Fxq 'CONFIG_KSU=y' out/.config; then
+            echo '--- KernelSU-related final config ---'
+            grep -Ei 'KSU|SUSFS' out/.config || true
+            echo "::error::CONFIG_KSU=y is missing from the final kernel config."
+            exit 1
+          fi
+          echo '--- KernelSU/SUSFS final config ---'
+          grep -Ei 'KSU|SUSFS' out/.config || true
           grep -Fxq 'CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME="Image.gz-dtb"' out/.config
           test -s out/arch/arm64/boot/Image.gz-dtb
           #test -s out/arch/arm64/boot/Image.gz
