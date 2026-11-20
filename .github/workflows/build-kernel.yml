@@ -1,4 +1,4 @@
-name: Build kernel No KSU
+name: Build kernel with FinaSU (KernelSU)
 
 on:
   workflow_dispatch:
@@ -14,15 +14,14 @@ jobs:
       - name: Check selected branch
         shell: bash
         run: |
-          if [[ "$GITHUB_REF_NAME" != "noksu" ]]; then
+          if [[ "$GITHUB_REF_NAME" != "test-Fina" ]]; then
             echo "::error::Select the Nethunter branch (the branch containing build.sh and config.cfg)."
             exit 1
           fi
 
       - name: Check out kernel and submodules
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
+        
 
       - name: Install build dependencies
         run: |
@@ -47,11 +46,16 @@ jobs:
         env:
           TERM: xterm
         run: |
-          set -euo pipefail
-          test -f build.sh
-          test -f config.cfg
-          test -f arch/arm64/configs/m32_nethunter_defconfig
-          test ! -e out/.config
+          curl -fLSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s dev
+
+          # Confirm FinaSU is integrated into this kernel source tree.
+          test -f drivers/kernelsu/Kconfig
+          test -f drivers/kernelsu/Makefile
+          grep -Fq 'drivers/kernelsu/Kconfig' drivers/Kconfig
+
+          # Confirm the selected defconfig requests built-in KernelSU.
+          grep -Fxq 'CONFIG_KSU=y' arch/arm64/configs/m32_nethunter_defconfig
+
           printf '1\nm32_nethunter_defconfig\n\nE\n' |
             timeout 110m bash ./build.sh 2>&1 | tee "$RUNNER_TEMP/kernel-build.log"
           if grep -Eq 'Kernel Building Failed|Config Applying Failed|Cleaning Failed|m32_nethunter_defconfig is not found' \
@@ -63,6 +67,9 @@ jobs:
           grep -Fq '[+] Config Applying Succeed' "$RUNNER_TEMP/kernel-build.log"
           grep -Fq '[+] Kernel Building Succeed' "$RUNNER_TEMP/kernel-build.log"
           test -s out/.config
+          # Fail instead of uploading a kernel if KernelSU was dropped from the final config.
+          grep -Fxq 'CONFIG_KSU=y' out/.config
+          grep -Fxq 'CONFIG_KSU_SUSFS=y' out/.config
           grep -Fxq 'CONFIG_BUILD_ARM64_APPENDED_KERNEL_IMAGE_NAME="Image.gz-dtb"' out/.config
           test -s out/arch/arm64/boot/Image.gz-dtb
           #test -s out/arch/arm64/boot/Image.gz
