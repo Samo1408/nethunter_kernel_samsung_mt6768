@@ -50,10 +50,10 @@ jobs:
           git clone --depth=1 https://github.com/karamdev1/zyc-clang-14-20260619.git ~/toolchains/zyc-clang-14-20260619
 
       - name: Configure Kernel
-        run: ./build.sh applyConfig ${{ matrix.device.defconfig }}
+        run: ./build.sh applyDefconfig ${{ matrix.device.defconfig }}
 
       - name: Compile Kernel
-        run: ./build.sh build
+        run: ./build.sh compilekernel
 
       - name: Copy Compiled Images
         run: |
