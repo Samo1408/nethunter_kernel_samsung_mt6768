@@ -1,4 +1,4 @@
-name: Build NetHunter kernel
+name: Build kernel
 
 on:
   workflow_dispatch:
